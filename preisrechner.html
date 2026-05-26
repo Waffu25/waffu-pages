@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waffu — Preisrechner</title>
+<style>
+  /* ============================================================
+     WAFFU PREISRECHNER  —  Sektion 12 "DEIN PREIS — SOFORT."
+     Eigenständiges Widget. Keine externen Abhängigkeiten.
+     ============================================================ */
+
+  :root{
+    --black:#0A0A0A;
+    --cream:#F5F2EC;
+    --gold:#C8763A;        /* Waffle Gold — Corporate Akzent */
+    --green:#3FCF6A;       /* WhatsApp-Grün, nur fuer CTA */
+    --line:rgba(245,242,236,.16);
+    --line-strong:rgba(245,242,236,.32);
+    --muted:rgba(245,242,236,.5);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html,body{
+    background:var(--black);
+    color:var(--cream);
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:56px 32px 64px;
+  }
+
+  /* ---- Kopfzeile der Sektion ---- */
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .headline{
+    font-size:clamp(38px,6vw,68px);
+    font-weight:800;
+    line-height:.98;
+    letter-spacing:-.02em;
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .subline{
+    font-size:15px;
+    line-height:1.5;
+    color:var(--muted);
+    max-width:340px;
+    margin-bottom:44px;
+  }
+
+  /* ---- Layout: Auswahl links, Ergebnis rechts ---- */
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 380px;
+    gap:48px;
+    align-items:start;
+  }
+
+  /* ---- Auswahlblock ---- */
+  .block{margin-bottom:30px;}
+  .block:last-child{margin-bottom:0;}
+
+  .block-label{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+    color:var(--muted);
+    margin-bottom:14px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line);
+  }
+  .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;height:18px;
+    background:var(--cream);
+    color:var(--black);
+    font-size:10px;
+    font-weight:800;
+    border-radius:2px;
+  }
+
+  .options{display:flex;flex-wrap:wrap;gap:8px;}
+
+  .opt{
+    appearance:none;
+    background:transparent;
+    color:var(--cream);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+    padding:11px 16px;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .12s ease,border-color .12s ease,color .12s ease;
+  }
+  .opt:hover{border-color:var(--cream);}
+  .opt[data-on="1"]{
+    background:var(--cream);
+    color:var(--black);
+    border-color:var(--cream);
+  }
+
+  /* ---- Ergebnis-Box ---- */
+  .result{
+    background:#141414;
+    border:1px solid var(--line-strong);
+    border-radius:4px;
+    padding:26px 26px 24px;
+    position:sticky;
+    top:24px;
+  }
+  .result-label{
+    font-size:10px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .price-row{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .price-ab{
+    font-size:14px;
+    font-weight:700;
+    color:var(--muted);
+  }
+  .price{
+    font-size:clamp(40px,6vw,52px);
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1;
+  }
+  .range{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  .summary{
+    font-size:12.5px;
+    line-height:1.55;
+    color:rgba(245,242,236,.72);
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    margin-bottom:18px;
+  }
+
+  .cta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    background:var(--cream);
+    color:var(--black);
+    border:none;
+    border-radius:3px;
+    padding:14px 18px;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    cursor:pointer;
+    text-decoration:none;
+    transition:background .12s ease;
+  }
+  .cta:hover{background:#fff;}
+  .cta .arrow{font-weight:700;}
+
+  .footnote{
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-top:14px;
+    text-align:center;
+  }
+
+  /* ---- Mobil ---- */
+  @media (max-width:820px){
+    .wrap{padding:40px 20px 48px;}
+    .grid{grid-template-columns:1fr;gap:32px;}
+    .result{position:static;}
+    .subline{margin-bottom:32px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="eyebrow">12 / Angebot in Sekunden</div>
+  <h1 class="headline">Dein Preis&nbsp;— Sofort.</h1>
+  <p class="subline">Vier Klicks. Eine Preisindikation. Keine Wartezeit auf einen Rückruf.</p>
+
+  <div class="grid">
+
+    <!-- ===== AUSWAHL ===== -->
+    <div class="picker">
+
+      <div class="block" data-group="anlass">
+        <div class="block-label"><span class="num">1</span> Anlass</div>
+        <div class="options">
+          <button class="opt" data-value="Hochzeit">Hochzeit</button>
+          <button class="opt" data-value="Firmenevent">Firmenevent</button>
+          <button class="opt" data-value="Private Feier">Private Feier</button>
+          <button class="opt" data-value="Messe / Promo">Messe / Promo</button>
+        </div>
+      </div>
+
+      <div class="block" data-group="gaeste">
+        <div class="block-label"><span class="num">2</span> Gäste</div>
+        <div class="options">
+          <button class="opt" data-value="30"  data-label="bis 30">bis 30</button>
+          <button class="opt" data-value="80"  data-label="bis 80">bis 80</button>
+          <button class="opt" data-value="120" data-label="bis 120">bis 120</button>
+          <button class="opt" data-value="200" data-label="bis 200">bis 200</button>
+          <button class="opt" data-value="201" data-label="200+">200+</button>
+        </div>
+      </div>
+
+      <div class="block" data-group="dauer">
+        <div class="block-label"><span class="num">3</span> Dauer</div>
+        <div class="options">
+          <button class="opt" data-value="2" data-label="2h">2h</button>
+          <button class="opt" data-value="3" data-label="3h">3h</button>
+          <button class="opt" data-value="4" data-label="4h">4h</button>
+          <button class="opt" data-value="5" data-label="5h">5h</button>
+          <button class="opt" data-value="7" data-label="7h+">7h+</button>
+        </div>
+      </div>
+
+      <div class="block" data-group="extra">
+        <div class="block-label"><span class="num">4</span> Was soll dabei sein?</div>
+        <div class="options">
+          <button class="opt" data-value="kaffee">Nur Kaffee</button>
+          <button class="opt" data-value="waffeln">Kaffee &amp; Waffeln</button>
+          <button class="opt" data-value="branding">+ Sondertopping / Branding</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== ERGEBNIS ===== -->
+    <div class="result">
+      <div class="result-label">Deine Indikation</div>
+      <div class="price-row">
+        <span class="price-ab">ab</span>
+        <span class="price" id="price">€1 090</span>
+      </div>
+      <div class="range" id="range">Range: €1 080 – €1 220 netto</div>
+      <div class="summary" id="summary">
+        Hochzeit · bis 80 Gäste · 4h Service · Kaffee &amp; Waffeln · An- &amp; Abfahrt Steiermark inkl.
+      </div>
+      <a class="cta" id="cta" href="#anfrage">
+        <span>Preis fixieren &amp; anfragen</span>
+        <span class="arrow">→</span>
+      </a>
+      <div class="footnote">Indikative Preise · Festpreis im Angebot · Keine versteckten Kosten</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   PREISLOGIK  —  hier kannst du spaeter alle Zahlen anpassen.
+   Aktuell so kalibriert, dass die Default-Auswahl
+   (Hochzeit · bis 80 · 4h · Kaffee & Waffeln) ~ "ab 1 090" ergibt.
+   ================================================================ */
+
+  var PRICING = {
+    /* Grundpreis je Anlass */
+    anlass: {
+      "Hochzeit":      690,
+      "Firmenevent":   640,
+      "Private Feier": 590,
+      "Messe / Promo": 740
+    },
+    /* Aufschlag je Gaestestufe */
+    gaeste: {
+      "30":  0,
+      "80":  150,
+      "120": 360,
+      "200": 620,
+      "201": 900
+    },
+    /* Aufschlag je Stunde ueber 3h Basis hinaus */
+    stundenBasis: 3,
+    proStunde: 90,
+    /* Aufschlag je Leistungsumfang */
+    extra: {
+      "kaffee":   0,
+      "waffeln":  180,
+      "branding": 340
+    },
+    /* +/- Spannweite der Range, als Anteil */
+    rangeSpread: 0.06
+  };
+
+  /* Default-Auswahl beim Laden */
+  var state = {
+    anlass: "Hochzeit",
+    gaeste: "80",
+    dauer:  "4",
+    extra:  "waffeln"
+  };
+
+  var GROUP_KEY = { anlass:"anlass", gaeste:"gaeste", dauer:"dauer", extra:"extra" };
+
+  function eur(n){
+    return "€" + Math.round(n).toLocaleString("de-DE").replace(/\./g," ");
+  }
+
+  function gaesteLabel(v){
+    var map = {"30":"bis 30","80":"bis 80","120":"bis 120","200":"bis 200","201":"200+"};
+    return map[v] || v;
+  }
+  function extraLabel(v){
+    var map = {"kaffee":"Nur Kaffee","waffeln":"Kaffee & Waffeln","branding":"Kaffee, Waffeln & Branding"};
+    return map[v] || v;
+  }
+
+  function calc(){
+    var base   = PRICING.anlass[state.anlass] || 0;
+    var gaeste = PRICING.gaeste[state.gaeste] || 0;
+    var hours  = Math.max(0, Number(state.dauer) - PRICING.stundenBasis);
+    var dauer  = hours * PRICING.proStunde;
+    var extra  = PRICING.extra[state.extra] || 0;
+
+    var total = base + gaeste + dauer + extra;
+    var lo = total * (1 - PRICING.rangeSpread);
+    var hi = total * (1 + PRICING.rangeSpread);
+    return { total:total, lo:lo, hi:hi };
+  }
+
+  function render(){
+    var r = calc();
+    document.getElementById("price").textContent = eur(r.total);
+    document.getElementById("range").textContent =
+      "Range: " + eur(r.lo) + " – " + eur(r.hi) + " netto";
+    document.getElementById("summary").textContent =
+      state.anlass + " · " + gaesteLabel(state.gaeste) + " Gäste · " +
+      state.dauer + "h Service · " + extraLabel(state.extra) +
+      " · An- & Abfahrt Steiermark inkl.";
+  }
+
+  /* Buttons verdrahten */
+  document.querySelectorAll(".block").forEach(function(block){
+    var group = block.getAttribute("data-group");
+    var key = GROUP_KEY[group];
+    var opts = block.querySelectorAll(".opt");
+
+    function setActive(){
+      opts.forEach(function(o){
+        o.setAttribute("data-on", o.getAttribute("data-value") === state[key] ? "1" : "0");
+      });
+    }
+    opts.forEach(function(o){
+      o.addEventListener("click", function(){
+        state[key] = o.getAttribute("data-value");
+        setActive();
+        render();
+      });
+    });
+    setActive();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
